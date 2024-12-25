@@ -1,0 +1,44 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  rubocop:
+    name: RuboCop Analysis
+    runs-on: ubuntu-latest
+    container:
+      image: ruby:3.2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install RuboCop
+        run: gem install rubocop
+      - name: Run RuboCop
+        run: rubocop -x
+
+  vagrant_validate:
+    name: Vagrant Validate
+    runs-on: ubuntu-latest
+    container:
+      image: andreptb/virtualbox-vagrant
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Validate Vagrant configuration
+        run: |
+          vagrant --version
+          VBoxManage --version
+          vagrant validate
+
+  success_job:
+    name: Success Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Success
+        run: echo "New code was successfully created.."
