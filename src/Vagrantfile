@@ -1,0 +1,45 @@
+# Validate environment variables
+adapter_name = ENV['ADAPTER_NAME'] || "wlp0s20f3"
+
+# VM 1 Config (Ubuntu)
+vm_name1 = ENV['VM1_NAME'] || "vm1"
+ip_address1 = ENV['VM1_IP'] || "192.168.1.200"
+vagrant_box1 = ENV['VM1_BOX'] || "ubuntu/focal64"
+vm_memory1 = ENV['VM1_MEMORY'] || 1024
+vm_cpus1 = ENV['VM1_CPUS'] || 1
+
+# VM 2 Config (CentOS)
+vm_name2 = ENV['VM2_NAME'] || "vm2"
+ip_address2 = ENV['VM2_IP'] || "192.168.1.201"
+vagrant_box2 = ENV['VM2_BOX'] || "centos/8"
+vm_memory2 = ENV['VM2_MEMORY'] || 1024
+vm_cpus2 = ENV['VM2_CPUS'] || 1
+
+Vagrant.configure("2") do |config|
+  # Define VM1 (Ubuntu)
+  config.vm.define vm_name1 do |vm1|
+    configure_vm(vm1, vm_name1, vagrant_box1, vm_memory1, vm_cpus1, adapter_name, ip_address1, "ubuntu")
+  end
+
+  # Define VM2 (CentOS)
+  config.vm.define vm_name2 do |vm2|
+    configure_vm(vm2, vm_name2, vagrant_box2, vm_memory2, vm_cpus2, adapter_name, ip_address2, "centos")
+  end
+end
+
+# Helper function for VM configuration
+def configure_vm(vm, name, box, memory, cpus, adapter, ip_address, os)
+  vm.vm.box = box
+  vm.vm.hostname = name
+  vm.vm.network "public_network", ip: ip_address, bridge: adapter
+
+  vm.vm.provision "shell", inline: <<-SHELL
+    echo "Hello from #{name} running #{os}!"
+  SHELL
+
+  vm.vm.provider "virtualbox" do |vb|
+    vb.memory = memory
+    vb.cpus = cpus
+    vb.customize ["modifyvm", :id, "--memory", memory, "--cpus", cpus]
+  end
+end
