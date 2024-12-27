@@ -70,24 +70,3 @@ control 'networking-tools' do
     it { should exist }
   end
 end
-
-control 'print-ip-address' do
-  impact 0.0
-  title 'Print the IP address of the target system'
-  desc 'This control will print the IP address of the target machine.'
-
-  # Use a system command to retrieve the IP address
-  ip_address = command("hostname -I").stdout.strip
-
-  # Print the IP address
-  describe ip_address do
-    it { should_not be_empty }
-  end
-
-  # Output the IP address to the logs
-  ruby_block 'print_ip_address' do
-    block do
-      puts "Target IP Address: #{ip_address}"
-    end
-  end
-end

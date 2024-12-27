@@ -74,7 +74,7 @@ Go peep the Chef Inspec's documentation.
 
 How to start with GitHub Actions? 
 
-If you have the repo opened, you can see that we have a YAML file with the name .github/workflows/vagrant-workflow.yaml, this one is the pipeline that will ensure your code is built with quality and compliance. So the first step is to create it and then start scripting your whole integration process. 
+If you have the repo opened, you can see that we have a YAML file with the name `.github/workflows/vagrant-workflow.yaml`, this one is the pipeline that will ensure your code is built with quality and compliance. So the first step is to create it and then start scripting your whole integration process. 
 
 In our case, we have defined here that we want to run `rubocop -x` and `vagrant validate`.
 
@@ -82,7 +82,7 @@ In our case, we are using GitHub self hosted agents to create containers that ar
 
  
 
-You can use a self-hosted runner (which is a server that you provision and then links with GitLab) to use more resources or images that are not available within GitHub Agents. 
+You can use a self-hosted runner (which is a server that you provision and then links with GitHub) to use more resources or images that are not available within GitHub Agents. 
 To run a pipeline you need to commit changes or just go to your branch and select the pipelines at the Actions option. 
 
 And there you go, Now try to troubleshoot whole problems you will see in your console (if not, I'm so proud of you) until the pipeline runs smoothly. 
@@ -94,10 +94,9 @@ And there you go, Now try to troubleshoot whole problems you will see in your co
 In my case, I am using a docker container, more elegant. 
 
 ``` 
-docker run --name jenkinscont -d ` 
-    --network vagrant-jenkins-network ` 
-    -p 8080:8080 -p 50000:50000 ` 
-    -v jenkins_home:/var/jenkins_home ` 
+docker run --name jenkinscont -d \
+    -v jenkins_home:/var/jenkins_home \
+    -p 8080:8080 -p 50000:50000 \
     jenkins/jenkins:lts 
 ``` 
 
@@ -122,5 +121,3 @@ sudo apt install -y default-jre
 ```
 
 Then go to Jenkins nodes and add one with the Pipeline option and then follow the Linux installation.
-
-inspec exec chef/controls.rb --target ssh://vagrant@192.168.1.200 --password='vagrant' --chef-license accept

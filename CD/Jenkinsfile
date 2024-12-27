@@ -1,18 +1,20 @@
 pipeline {
-    agent { label 'vagrant' }
+    agent { label 'test-agent' }  // Use the label of your self-hosted agent
 
     environment {
-        WORKSPACE = "/home/jaymckenzie/Desktop/vagrant-ci-cd-deployment/src"
+        // Set environment variables for your paths
+        WORKSPACE = "/path/to/the/vagrant-ci-cd-deployment/repo"  // Adjust the path if needed
+        VAGRANT_PATH = "${WORKSPACE}/src"  // Here is stored the Vagrantfile
     }
 
     parameters {
-        string(name: 'VM1_NAME', description: 'Name of VM1')
-        string(name: 'VM1_IP', description: 'IP address of VM1')
-        string(name: 'VM1_BOX', description: 'Vagrant box for VM1')
-        string(name: 'VM2_NAME', description: 'Name of VM2')
-        string(name: 'VM2_IP', description: 'IP address of VM2')
-        string(name: 'VM2_BOX', description: 'Vagrant box for VM2')
-        string(name: 'ADAPTER_NAME', defaultValue: 'wlp0s20f3', description: 'Name of the network adapter')
+        string(name: 'VM1_NAME', defaultValue: '', description: 'Name of VM1')
+        string(name: 'VM1_IP', defaultValue: '', description: 'IP address of VM1')
+        string(name: 'VM1_BOX', defaultValue: 'ubuntu/focal64', description: 'Vagrant box for VM1')
+        string(name: 'VM2_NAME', defaultValue: '', description: 'Name of VM2')
+        string(name: 'VM2_IP', defaultValue: '', description: 'IP address of VM2')
+        string(name: 'VM2_BOX', defaultValue: 'centos/8', description: 'Vagrant box for VM2')
+        string(name: 'ADAPTER_NAME', defaultValue: 'wlp0s20f3', description: 'Name of the network adapter (Generic)')
         string(name: 'VM1_MEMORY', defaultValue: '1024', description: 'Memory allocation for VM1 (MB)')
         string(name: 'VM1_CPUS', defaultValue: '1', description: 'Number of CPUs for VM1')
         string(name: 'VM2_MEMORY', defaultValue: '1024', description: 'Memory allocation for VM2 (MB)')
@@ -23,26 +25,11 @@ pipeline {
         stage('Vagrant Up') {
             steps {
                 script {
-                    // Set environment variables for Vagrant
-                    env.VM1_NAME = params.VM1_NAME
-                    env.VM1_IP = params.VM1_IP
-                    env.VM1_BOX = params.VM1_BOX
-                    env.VM1_MEMORY = params.VM1_MEMORY
-                    env.VM1_CPUS = params.VM1_CPUS
+                    // Verify that the Vagrantfile exists in the mounted directory
+                    sh 'ls -l ${VAGRANT_PATH}'
 
-                    env.VM2_NAME = params.VM2_NAME
-                    env.VM2_IP = params.VM2_IP
-                    env.VM2_BOX = params.VM2_BOX
-                    env.VM2_MEMORY = params.VM2_MEMORY
-                    env.VM2_CPUS = params.VM2_CPUS
-
-                    env.ADAPTER_NAME = params.ADAPTER_NAME
-
-                    // Navigate to the workspace and run Vagrant
-                    sh """
-                    cd "${WORKSPACE}"
-                    vagrant up
-                    """
+                    // Run Vagrant using the environment variables for the Vagrantfile
+                    sh "cd ${VAGRANT_PATH} && vagrant up"
                 }
             }
         }
@@ -50,13 +37,13 @@ pipeline {
         stage('Run Chef Inspec on VM1') {
             steps {
                 script {
-                    // Run Chef InSpec tests on VM1 using SSH
-                    sh """
+                    sh '''
+                    cd ${WORKSPACE}
                     inspec exec chef/controls.rb \
-                    --host "\$(vagrant ssh-config --host \${params.VM1_NAME} | grep HostName | awk '{print \$2}')" \
+                    --host "$(vagrant ssh-config --host ${params.VM1_NAME} | grep HostName | awk '{print $2}')" \
                     --user vagrant \
-                    --key-files "\$(vagrant ssh-config --host \${params.VM1_NAME} | grep IdentityFile | awk '{print \$2}')"
-                    """
+                    --key-files "$(vagrant ssh-config --host ${params.VM1_NAME} | grep IdentityFile | awk '{print $2}')"
+                    '''
                 }
             }
         }
@@ -64,13 +51,28 @@ pipeline {
         stage('Run Chef Inspec on VM2') {
             steps {
                 script {
-                    // Run Chef InSpec tests on VM2 using SSH
-                    sh """
+                    sh '''
+                    cd ${WORKSPACE}
                     inspec exec chef/controls.rb \
-                    --host "\$(vagrant ssh-config --host \${params.VM2_NAME} | grep HostName | awk '{print \$2}')" \
+                    --host "$(vagrant ssh-config --host ${params.VM2_NAME} | grep HostName | awk '{print $2}')" \
                     --user vagrant \
-                    --key-files "\$(vagrant ssh-config --host \${params.VM2_NAME} | grep IdentityFile | awk '{print \$2}')"
-                    """
+                    --key-files "$(vagrant ssh-config --host ${params.VM2_NAME} | grep IdentityFile | awk '{print $2}')"
+                    '''
+                }
+            }
+        }
+
+        stage('Manual Intervention') {
+            steps {
+                input message: 'Do you want to proceed with Vagrant destroy?', parameters: []
+            }
+        }
+
+        stage('Vagrant destroy') {
+            steps {
+                script {
+                    // Run Vagrant destroy using the environment variables for the Vagrantfile
+                    sh "cd ${VAGRANT_PATH} && vagrant destroy -f"
                 }
             }
         }
