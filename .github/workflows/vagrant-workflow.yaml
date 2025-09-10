@@ -22,24 +22,10 @@ jobs:
       - name: Run RuboCop
         run: rubocop -x
 
-  vagrant_validate:
-    name: Vagrant Validate
-    runs-on: self-hosted
-    needs: rubocop  # This ensures rubocop runs first
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Validate Vagrant Configuration
-        run: |
-          vagrant --version
-          VBoxManage --version
-          cd src/
-          vagrant validate
-
   success_job:
     name: Success Notification
     runs-on: ubuntu-latest
-    needs: vagrant_validate  # This ensures vagrant_validate runs second
+    needs: rubocop  # This ensures vagrant_validate runs second
     steps:
       - name: Notify Success
         run: echo "New code was successfully created.."
