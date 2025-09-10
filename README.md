@@ -60,7 +60,7 @@ Then, once that you have that, you are going to setup 2 vms to have a Vagrant bo
 Then run: 
 
 `vagrant up`  
-
+Test
 
 And then it will create a fresh VM pulling the installation box.  
 
