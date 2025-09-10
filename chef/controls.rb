@@ -1,5 +1,5 @@
 # Check OS family and version
-control 'os-family' do
+  control 'os-family' do
   impact 1.0
   title 'Verify the OS family and version'
   desc 'Ensure the OS is either Ubuntu or CentOS and the version matches expectations.'
